@@ -1,0 +1,14 @@
+{
+  "name": "plaid-financial-insights",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend start\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
