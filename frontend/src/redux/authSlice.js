@@ -7,7 +7,10 @@ const BACKEND_URL = 'http://localhost:5005';
 export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) => {
   try {
     const response = await axios.post(`${BACKEND_URL}/api/auth/login`, userData);
+    
+    // Ensure both token and userId are being stored in localStorage
     localStorage.setItem('token', response.data.token);
+    localStorage.setItem('userId', response.data.user._id); // Assuming user._id contains userId
     
     // Log the backend response
     console.log('Backend response (login):', response.data);
@@ -23,7 +26,10 @@ export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) =
 export const register = createAsyncThunk('auth/register', async (userData, thunkAPI) => {
   try {
     const response = await axios.post(`${BACKEND_URL}/api/auth/register`, userData);
+    
+    // Ensure both token and userId are being stored in localStorage
     localStorage.setItem('token', response.data.token);
+    localStorage.setItem('userId', response.data.user._id); // Assuming user._id contains userId
     
     // Log the backend response
     console.log('Backend response (register):', response.data);
@@ -50,6 +56,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('userId'); // Ensure userId is removed on logout
       console.log('User logged out');
     },
     resetAuthState: (state) => {

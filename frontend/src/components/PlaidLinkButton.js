@@ -4,55 +4,60 @@ import axios from 'axios';
 
 const PlaidLinkButton = ({ userId }) => {
   const [linkToken, setLinkToken] = useState(null);
-  const [error, setError] = useState(null); // Error state for handling issues
+  const [error, setError] = useState(null);
 
+  // Step 1: Create the link token on component mount
   useEffect(() => {
     const createLinkToken = async () => {
-        const token = localStorage.getItem('token'); // Get the token from localStorage
-        const userId = localStorage.getItem('userId'); // Ensure userId is stored and retrieved properly
-        try {
-          // Make the POST request to your backend to create a link token
-          const response = await axios.post(
-            'http://localhost:5005/api/plaid/create-link-token',
-            {
-              userId, // Passing userId in the body, no need to wrap in another 'user' object
-            },
-            {
-              headers: {
-                'Authorization': `Bearer ${token}`, // Passing the JWT token for authentication
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-      
-          // Set the returned link token in state
-          setLinkToken(response.data.link_token);
-        } catch (error) {
-          console.error('Error creating link token:', error);
-          setError('Failed to create link token');
-        }
-      };
-      
-      
-      
-      
-    createLinkToken();
-  }, [userId]);
+      const token = localStorage.getItem('token');
 
+      if (!userId || userId.trim() === '') {
+        console.error('Invalid userId:', userId);
+        setError('Invalid userId. Cannot create link token.');
+        return;
+      }
+
+      try {
+        const response = await axios.post(
+          'http://localhost:5005/api/plaid/create-link-token',
+          { userId }, 
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        setLinkToken(response.data.link_token);
+      } catch (error) {
+        console.error('Error creating link token:', error);
+        setError('Failed to create link token');
+      }
+    };
+
+    if (!linkToken) {
+      createLinkToken();
+    }
+  }, [userId, linkToken]);
+
+  // Step 2: Handle Plaid Link Success
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: async (publicToken) => {
       try {
-        const token = localStorage.getItem('token'); // Ensure token is used here too
-        const response = await axios.post('http://localhost:5005/api/plaid/exchange-token', 
-        { publicToken }, 
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`, // Pass token when exchanging public token
-            'Content-Type': 'application/json'
+        const token = localStorage.getItem('token');
+        const response = await axios.post(
+          'http://localhost:5005/api/plaid/exchange-token',
+          { publicToken }, 
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
           }
-        });
-        console.log("Access Token:", response.data.accessToken);
+        );
+        console.log('Access Token:', response.data.accessToken);
+        localStorage.setItem('plaid_access_token', response.data.accessToken); // Store access token
       } catch (error) {
         console.error('Error exchanging public token:', error);
         setError('Failed to exchange token');
@@ -60,7 +65,7 @@ const PlaidLinkButton = ({ userId }) => {
     },
   });
 
-  if (error) return <p>{error}</p>; // Show error message if there's an issue
+  if (error) return <p>{error}</p>;
 
   return (
     linkToken ? (
@@ -72,7 +77,7 @@ const PlaidLinkButton = ({ userId }) => {
         Link Your Bank Account
       </button>
     ) : (
-      <p>Loading Link Token...</p> // Show loading state
+      <p>Loading Link Token...</p>
     )
   );
 };
