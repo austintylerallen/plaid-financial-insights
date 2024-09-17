@@ -4,14 +4,18 @@ import axios from 'axios';
 const Transactions = ({ userId }) => {
   const [transactions, setTransactions] = useState([]);
 
+  // Define startDate and endDate
+  const startDate = '2023-01-01';
+  const endDate = '2024-01-01';
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const response = await axios.get('/api/plaid/transactions', {
           params: {
             userId,
-            startDate: '2023-01-01',
-            endDate: '2024-01-01'
+            startDate,  // Use defined variables
+            endDate     // Use defined variables
           }
         });
         setTransactions(response.data);

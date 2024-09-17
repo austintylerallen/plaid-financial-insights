@@ -1,49 +1,48 @@
 const express = require('express');
-const plaidClient = require('../config/plaidConfig');
-const User = require('../models/User');
+const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const router = express.Router();
 
-// Exchange public token for access token and store in MongoDB
-router.post('/exchange-public-token', async (req, res) => {
-  const { public_token } = req.body;
-  try {
-    const response = await plaidClient.itemPublicTokenExchange({ public_token });
-    const accessToken = response.access_token;
-    const itemId = response.item_id;
-
-    // Store the access token and itemId in MongoDB
-    const user = new User({
-      plaidAccessToken: accessToken,
-      plaidItemId: itemId,
-    });
-    await user.save();
-
-    res.json({ accessToken, itemId });
-  } catch (error) {
-    console.error('Error exchanging public token:', error);
-    res.status(500).json({ error: 'Could not exchange public token' });
-  }
-});
-
+// Plaid client setup
+const plaidClient = new PlaidApi(new Configuration({
+  basePath: PlaidEnvironments.sandbox,
+  baseOptions: {
+    headers: {
+      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+      'PLAID-SECRET': process.env.PLAID_SECRET,
+    },
+  },
+}));
 
 router.post('/create-link-token', async (req, res) => {
     try {
+      const { userId } = req.body;
       const response = await plaidClient.linkTokenCreate({
-        user: { client_user_id: req.body.userId },  // Unique ID for your user
+        user: { client_user_id: userId },
         client_name: 'Plaid Financial Insights',
-        products: ['transactions'],
+        products: ['auth', 'transactions'],
         country_codes: ['US'],
         language: 'en',
-        redirect_uri: process.env.PLAID_REDIRECT_URI,  // Required for OAuth
       });
       res.json({ link_token: response.data.link_token });
     } catch (error) {
-      console.error('Error generating link token:', error);
-      res.status(500).json({ error: 'Could not generate link token' });
+      console.error('Error creating link token:', error.response ? error.response.data : error.message);
+      res.status(500).json({ error: 'Error creating link token' });
     }
   });
+  
+  router.post('/exchange-token', async (req, res) => {
+    try {
+      const { publicToken } = req.body;
+      const response = await plaidClient.itemPublicTokenExchange({ public_token: publicToken });
+      res.json({ accessToken: response.data.access_token });
+    } catch (error) {
+      console.error('Error exchanging public token:', error.response ? error.response.data : error.message);
+      res.status(500).json({ error: 'Error exchanging public token' });
+    }
+  });
+  
 
-  
-  
 module.exports = router;
