@@ -7,6 +7,12 @@ const cors = require('cors');
 const verifyToken = require('./middleware/authMiddleware'); // Import token verification middleware
 const protectedRoutes = require('./routes/protectedRoutes'); // Import additional protected routes
 
+// Import new routes
+const insightsRoutes = require('./routes/insightsRoutes');
+const budgetRoutes = require('./routes/budgetRoutes');
+const summaryRoutes = require('./routes/summaryRoutes');
+const suggestionRoutes = require('./routes/suggestionRoutes');
+
 // Load environment variables
 dotenv.config();
 
@@ -33,6 +39,10 @@ app.use('/api/auth', authRoutes);
 
 // Protected routes (requires token for access)
 app.use('/api/plaid', verifyToken, plaidRoutes); // Plaid routes protected with token verification middleware
+app.use('/api/insights', verifyToken, insightsRoutes); // Insights routes
+app.use('/api', verifyToken, budgetRoutes); // Budget routes
+app.use('/api/summary', verifyToken, summaryRoutes); // Monthly summary routes
+app.use('/api', verifyToken, suggestionRoutes); // Suggestions routes
 
 // Use additional protected routes (requires token for access)
 app.use('/api', verifyToken, protectedRoutes); // Assuming protectedRoutes also need token verification

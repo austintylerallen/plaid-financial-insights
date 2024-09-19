@@ -53,28 +53,73 @@ router.post('/exchange-token', async (req, res) => {
 });
 
 // Route to fetch transactions
+// router.get('/transactions', async (req, res) => {
+//   try {
+//     const { accessToken, startDate, endDate } = req.query;
+
+//     // Ensure accessToken is provided
+//     if (!accessToken) {
+//       return res.status(400).json({ error: 'Access token is required' });
+//     }
+
+//     // Fetch transactions from Plaid
+//     const response = await plaidClient.transactionsGet({
+//       access_token: accessToken,
+//       start_date: startDate,
+//       end_date: endDate,
+//     });
+
+//     // Send the transactions data back
+//     res.json(response.data.transactions);
+//   } catch (error) {
+//     console.error('Error fetching transactions:', error.response ? error.response.data : error.message);
+//     res.status(500).json({ error: 'Error fetching transactions' });
+//   }
+// });
+
+
+// Route to fetch transactions with pagination
 router.get('/transactions', async (req, res) => {
   try {
-    const { accessToken, startDate, endDate } = req.query;
+    const { accessToken, startDate, endDate, page = 1, limit = 10 } = req.query;
 
     // Ensure accessToken is provided
     if (!accessToken) {
       return res.status(400).json({ error: 'Access token is required' });
     }
 
+    // Calculate the offset for pagination
+    const offset = (page - 1) * limit;
+
     // Fetch transactions from Plaid
     const response = await plaidClient.transactionsGet({
       access_token: accessToken,
       start_date: startDate,
       end_date: endDate,
+      options: {
+        count: parseInt(limit), // How many transactions to return per page
+        offset: parseInt(offset), // Which transaction to start from
+      },
     });
 
-    // Send the transactions data back
-    res.json(response.data.transactions);
+    // Send the transactions data back with pagination info
+    res.json({
+      transactions: response.data.transactions,
+      total_transactions: response.data.total_transactions,
+      current_page: page,
+      total_pages: Math.ceil(response.data.total_transactions / limit),
+    });
   } catch (error) {
     console.error('Error fetching transactions:', error.response ? error.response.data : error.message);
     res.status(500).json({ error: 'Error fetching transactions' });
   }
 });
+
+
+
+
+
+
+
 
 module.exports = router;

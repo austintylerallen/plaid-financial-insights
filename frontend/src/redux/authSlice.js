@@ -7,14 +7,14 @@ const BACKEND_URL = 'http://localhost:5005';
 export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) => {
   try {
     const response = await axios.post(`${BACKEND_URL}/api/auth/login`, userData);
-    
+
     // Ensure both token and userId are being stored in localStorage
     localStorage.setItem('token', response.data.token);
-    localStorage.setItem('userId', response.data.user._id); // Assuming user._id contains userId
-    
+    localStorage.setItem('userId', response.data.user.id); // Assuming user.id contains userId
+
     // Log the backend response
     console.log('Backend response (login):', response.data);
-    
+
     return response.data; // Ensure the backend returns { user, token }
   } catch (error) {
     console.error('Login error:', error.response ? error.response.data : error.message);
@@ -26,14 +26,14 @@ export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) =
 export const register = createAsyncThunk('auth/register', async (userData, thunkAPI) => {
   try {
     const response = await axios.post(`${BACKEND_URL}/api/auth/register`, userData);
-    
+
     // Ensure both token and userId are being stored in localStorage
     localStorage.setItem('token', response.data.token);
-    localStorage.setItem('userId', response.data.user._id); // Assuming user._id contains userId
-    
+    localStorage.setItem('userId', response.data.user.id); // Assuming user.id contains userId
+
     // Log the backend response
     console.log('Backend response (register):', response.data);
-    
+
     return response.data;
   } catch (error) {
     console.error('Registration error:', error.response ? error.response.data : error.message);
@@ -41,6 +41,7 @@ export const register = createAsyncThunk('auth/register', async (userData, thunk
   }
 });
 
+// Create the auth slice
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -65,7 +66,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       console.log('Auth state reset');
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -105,8 +106,9 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.loading = false;
       });
-  }
+  },
 });
 
+// Export the actions and reducer
 export const { logout, resetAuthState } = authSlice.actions;
 export default authSlice.reducer;

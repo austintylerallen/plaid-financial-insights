@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
 
-
 dotenv.config();  // Load environment variables
 
 const router = express.Router();
@@ -22,7 +21,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // Register Route
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   const users = await getUserCollection();
 
@@ -37,13 +36,18 @@ router.post('/register', async (req, res) => {
 
   // Create new user
   const newUser = {
+    firstName,
+    lastName,
     email,
     password: hashedPassword
   };
 
   await users.insertOne(newUser);
 
-  res.status(201).json({ message: 'User registered successfully' });
+  // Generate JWT token
+  const token = jwt.sign({ userId: newUser._id, firstName, lastName, email }, JWT_SECRET, { expiresIn: '24h' });
+
+  res.status(201).json({ token, user: { id: newUser._id, firstName, lastName, email } });
 });
 
 // Login Route
@@ -65,31 +69,35 @@ router.post('/login', async (req, res) => {
   }
 
   // Generate JWT token
-  const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+  const token = jwt.sign(
+    { userId: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
 
-  res.json({ token, user: { id: user._id, email: user.email } });
+  res.json({ token, user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email } });
 });
 
 // Protected Route Example
 router.get('/me', (req, res) => {
-    // Extract the token from the Authorization header
-    const token = req.headers.authorization?.split(' ')[1];
-  
-    // Check if token is missing
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-  
-    try {
-      // Verify the JWT token
-      const decoded = jwt.verify(token, JWT_SECRET);
-      
-      // Return user info from the decoded token
-      res.json({ userId: decoded.userId, email: decoded.email });
-    } catch (error) {
-      console.error('Error verifying token:', error.message);
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-  });
-  
+  // Extract the token from the Authorization header
+  const token = req.headers.authorization?.split(' ')[1];
+
+  // Check if token is missing
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    // Verify the JWT token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Return user info from the decoded token
+    res.json({ userId: decoded.userId, firstName: decoded.firstName, lastName: decoded.lastName, email: decoded.email });
+  } catch (error) {
+    console.error('Error verifying token:', error.message);
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+});
+
 module.exports = router;
