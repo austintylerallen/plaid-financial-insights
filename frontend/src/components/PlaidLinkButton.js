@@ -55,6 +55,11 @@ const PlaidLinkButton = ({ userId, onVerificationComplete }) => {
 
         // Store the access token
         const accessToken = response.data.accessToken;
+        console.log('Received Access Token:', accessToken); // Log the received access token
+        if (!accessToken.startsWith('access-')) {
+          throw new Error('Received invalid access token format');
+        }
+
         localStorage.setItem('plaid_access_token', accessToken);
 
         // Call the parent callback to trigger data refresh

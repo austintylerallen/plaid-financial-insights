@@ -21,7 +21,7 @@ const Navbar = () => {
 
   return (
     <nav className="p-4 bg-gray-700 text-gray-100 flex justify-between items-center shadow-lg">
-      <h1 className="text-2xl font-bold">App Name</h1>
+      <h1 className="text-2xl font-bold">SpendWise</h1>
       <button
         onClick={handleLogout}
         className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-all"

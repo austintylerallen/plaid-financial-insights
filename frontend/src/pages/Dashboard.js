@@ -12,7 +12,7 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth); // Get user from Redux state
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refresh, setRefresh] = useState(false); // Add state to trigger refresh
+  const [transactionsFetched, setTransactionsFetched] = useState(false); // Track if transactions were fetched
   const [accessToken, setAccessToken] = useState(localStorage.getItem('plaid_access_token') || null);
   const token = localStorage.getItem('token');
 
@@ -26,9 +26,10 @@ const Dashboard = () => {
 
   // This function will be triggered after Plaid verification completes successfully
   const handleVerificationComplete = (newAccessToken) => {
-    console.log("Verification complete, updating access token and refreshing data...");
-    setAccessToken(newAccessToken); // Update access token
-    setRefresh((prevState) => !prevState); // Trigger refresh state to refetch data
+    console.log("Verification complete, updating access token and fetching transactions...");
+    localStorage.setItem('plaid_access_token', newAccessToken); // Store access token in local storage
+    setAccessToken(newAccessToken); // Update state with new access token
+    setTransactionsFetched(false); // Allow transactions to be fetched again
   };
 
   // Fetch user-specific data from your backend (including transactions)
@@ -54,7 +55,15 @@ const Dashboard = () => {
       }
     };
     fetchData();
-  }, [token, refresh]); // Add `refresh` as a dependency to trigger re-fetching
+  }, [token]);
+
+  // Effect to fetch transactions after access token is set
+  useEffect(() => {
+    if (accessToken && !transactionsFetched) {
+      console.log('Access token set, fetching transactions...');
+      setTransactionsFetched(true); // Prevent re-fetching unless the access token changes
+    }
+  }, [accessToken, transactionsFetched]);
 
   // If still loading, show a loading indicator
   if (loading) {
@@ -74,35 +83,42 @@ const Dashboard = () => {
         {getGreeting()}, {user.firstName} {user.lastName}
       </h2>
 
-      {/* Add Transactions component to display user transactions */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-        <Transactions userId={user.id} accessToken={accessToken} /> {/* Pass the access token */}
-      </div>
+      {/* Display Plaid Link Button if accessToken not available */}
+      {!accessToken && (
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+          <p className="text-gray-400 mb-4">Please link your bank account to view transactions.</p>
+          <PlaidLinkButton userId={user.id} onVerificationComplete={handleVerificationComplete} />
+        </div>
+      )}
 
-      {/* Plaid Link */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-        <PlaidLinkButton userId={user.id} onVerificationComplete={handleVerificationComplete} />
-      </div>
+      {accessToken && (
+        <>
+          {/* Add Transactions component to display user transactions */}
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <Transactions userId={user.id} accessToken={accessToken} />
+          </div>
 
-      {/* Spending Trends */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-        <SpendingTrends />
-      </div>
+          {/* Spending Trends */}
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <SpendingTrends />
+          </div>
 
-      {/* Budget Management */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-        <Budget />
-      </div>
+          {/* Budget Management */}
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <Budget />
+          </div>
 
-      {/* Monthly Summaries */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-        <MonthlySummary />
-      </div>
+          {/* Monthly Summaries */}
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <MonthlySummary />
+          </div>
 
-      {/* Category Suggestions */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <CategorySuggestions />
-      </div>
+          {/* Category Suggestions */}
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <CategorySuggestions />
+          </div>
+        </>
+      )}
     </div>
   );
 };
