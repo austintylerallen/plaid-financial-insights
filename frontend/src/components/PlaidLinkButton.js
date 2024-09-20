@@ -73,18 +73,22 @@ const PlaidLinkButton = ({ userId, onVerificationComplete }) => {
     },
   });
 
-  if (error) return <p>{error}</p>;
+  if (error) return <p className="text-red-500">{error}</p>; // Optional: add styling to the error message
 
-  return linkToken ? (
-    <button
-      onClick={() => open()}
-      disabled={!ready}
-      className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
-    >
-      Link Your Bank Account
-    </button>
-  ) : (
-    <p>Loading Link Token...</p>
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-transparent"> {/* Flex container */}
+      {linkToken ? (
+        <button
+          onClick={() => open()}
+          disabled={!ready}
+          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+        >
+          Link Your Bank Account
+        </button>
+      ) : (
+        <p className="text-white">Loading Link Token...</p> 
+      )}
+    </div>
   );
 };
 

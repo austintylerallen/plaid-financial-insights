@@ -77,7 +77,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-900 p-8 flex flex-col items-center justify-center"> {/* Main flex container */}
       {/* Greeting */}
       <h2 className="text-3xl font-bold text-gray-100 mb-6">
         {getGreeting()}, {user.firstName} {user.lastName}
@@ -85,14 +85,14 @@ const Dashboard = () => {
 
       {/* Display Plaid Link Button if accessToken not available */}
       {!accessToken && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+        <div className="flex flex-col items-center justify-center min-h-[50vh]"> {/* Center the PlaidLinkButton */}
           <p className="text-gray-400 mb-4">Please link your bank account to view transactions.</p>
           <PlaidLinkButton userId={user.id} onVerificationComplete={handleVerificationComplete} />
         </div>
       )}
 
       {accessToken && (
-        <>
+        <div className="w-full"> {/* Add a wrapper div for content */}
           {/* Add Transactions component to display user transactions */}
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
             <Transactions userId={user.id} accessToken={accessToken} />
@@ -117,7 +117,7 @@ const Dashboard = () => {
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <CategorySuggestions />
           </div>
-        </>
+        </div>
       )}
     </div>
   );
