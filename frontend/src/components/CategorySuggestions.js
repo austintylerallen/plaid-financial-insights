@@ -10,12 +10,20 @@ const CategorySuggestions = () => {
       try {
         const response = await axios.get('http://localhost:5005/api/suggestions', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        setSuggestions(response.data);
+        
+        // Check if the response data is an array before setting it
+        if (Array.isArray(response.data)) {
+          setSuggestions(response.data);
+        } else {
+          console.error('Expected an array, but received:', response.data);
+          setSuggestions([]); // Set an empty array if data is not an array
+        }
       } catch (error) {
         console.error('Error fetching suggestions:', error);
+        setSuggestions([]); // Set an empty array in case of error
       }
     };
 
@@ -27,8 +35,8 @@ const CategorySuggestions = () => {
       <h2 className="text-2xl font-bold text-gray-100 mb-4">Category Suggestions</h2>
       {suggestions.length > 0 ? (
         <ul className="list-disc list-inside">
-          {suggestions.map((suggestion) => (
-            <li key={suggestion._id} className="text-gray-400">
+          {suggestions.map((suggestion, index) => (
+            <li key={suggestion._id || index} className="text-gray-400">
               {suggestion.name}: Suggested Category - {suggestion.suggestedCategory}
             </li>
           ))}
