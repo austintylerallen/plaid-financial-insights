@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install": "pnpm install",
-    "build": "pnpm --filter frontend run build", 
-    "start": "concurrently \"pnpm --filter backend run dev\" \"pnpm --filter frontend run start\"", 
-    "postinstall": "pnpm --filter frontend install && pnpm --filter backend install" 
+    "start": "concurrently \"pnpm --filter backend run dev\" \"pnpm --filter frontend run start\"",
+    "build": "pnpm --filter frontend run build"
   },
   "keywords": [],
   "author": "",
