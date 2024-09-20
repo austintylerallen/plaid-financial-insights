@@ -16,7 +16,14 @@ const Budget = () => {
             'Authorization': `Bearer ${token}`,
           },
         });
-        setBudgets(response.data);
+
+        // Check if response is valid JSON and contains the expected structure
+        if (response.data && typeof response.data === 'object') {
+          setBudgets(response.data);
+        } else {
+          console.error('Unexpected response format:', response.data);
+          setBudgets({}); // Set to an empty object if response is not valid
+        }
       } catch (error) {
         console.error('Error fetching budgets:', error);
       }
@@ -28,19 +35,32 @@ const Budget = () => {
   // Set budget for a category
   const handleSetBudget = async (e) => {
     e.preventDefault();
-    try {
-      await axios.post('http://localhost:5005/api/budget/set-budget', {
-        category,
-        amount,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+    if (!category || !amount) {
+      console.error('Category and amount are required');
+      return;
+    }
 
-      setBudgets(prevBudgets => ({ ...prevBudgets, [category]: amount }));
-      setCategory('');
-      setAmount('');
+    try {
+      const response = await axios.post(
+        'http://localhost:5005/api/budget/set-budget',
+        { category, amount },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setBudgets((prevBudgets) => ({
+          ...prevBudgets,
+          [category]: amount,
+        }));
+        setCategory('');
+        setAmount('');
+      } else {
+        console.error('Error setting budget:', response.data.message || 'Unknown error');
+      }
     } catch (error) {
       console.error('Error setting budget:', error);
     }
@@ -57,6 +77,7 @@ const Budget = () => {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="border border-gray-600 bg-gray-800 text-gray-300 rounded-md p-2 mt-1 block w-full"
+            required
           />
         </div>
         <div className="mb-4">
@@ -66,6 +87,7 @@ const Budget = () => {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="border border-gray-600 bg-gray-800 text-gray-300 rounded-md p-2 mt-1 block w-full"
+            required
           />
         </div>
         <button className="bg-teal-500 text-white py-2 px-4 rounded hover:bg-teal-600 transition-all">
@@ -76,7 +98,7 @@ const Budget = () => {
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-300 mb-2">Current Budgets</h3>
           <ul className="list-disc list-inside">
-            {Object.keys(budgets).map(category => (
+            {Object.keys(budgets).map((category) => (
               <li key={category} className="text-gray-400">
                 {category}: ${budgets[category]}
               </li>
